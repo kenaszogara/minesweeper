@@ -9,16 +9,16 @@ A simple minesweeper game created using NextJS
 
 ### Install dependencies before Running Project:
 
-1. with yarn
-
-```
-$ yarn install
-```
-
-2. with npm
+1. with npm
 
 ```
 $ npm install
+```
+
+2. with yarn
+
+```
+$ yarn install
 ```
 
 ### To run project:
