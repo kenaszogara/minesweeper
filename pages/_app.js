@@ -1,7 +1,12 @@
-import 'tailwindcss/tailwind.css'
+import TileProvider from "../src/components/tileProvider";
+import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />
+  return (
+    <TileProvider>
+      <Component {...pageProps} />;
+    </TileProvider>
+  );
 }
 
-export default MyApp
+export default MyApp;
