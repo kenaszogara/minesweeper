@@ -34,3 +34,5 @@ $ npm run dev
 ```
 $ yarn dev
 ```
+
+open project in (localhost)[http://localhost:3000]
