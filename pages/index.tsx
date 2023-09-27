@@ -1,26 +1,27 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useState, MouseEvent } from "react";
 import Tile from "../src/components/tile";
-import { useTile } from "../src/components/tileProvider";
+import { useAtom } from "jotai";
+import { revealMinesAtom } from "../src/components/tileProvider";
 
 export default function Board() {
   const [_row, setRow] = useState(6);
   const [_col, setCol] = useState(6);
   const [mineCount, setMineCount] = useState(5);
   const [level, setLevel] = useState("easy");
-  const [board, setBoard] = useState([]);
+  const [board, setBoard] = useState<any>([]);
   const [isGameStart, setGameStart] = useState(false);
   const [isGameOver, setGameOver] = useState(false);
   const [showScore, setShowScore] = useState(false);
   const [count, setCount] = useState(0);
-  const { revealMines, isRevealMines } = useTile();
+  const [isRevealMines, setIsRevealMines] = useAtom(revealMinesAtom);
 
   // logic for ending the game
   useEffect(() => {
     // console.log(count);
     if (count == _row * _col - mineCount) {
       alert("Congratulations, You have won!");
-      revealMines();
+      setIsRevealMines((prev) => !prev);
       setGameOver(true);
     }
   }, [count]);
@@ -36,7 +37,7 @@ export default function Board() {
     setGameOver(false);
     setGameStart(false);
     setShowScore(true);
-    isRevealMines ? revealMines() : null;
+    isRevealMines ? setIsRevealMines((prev) => !prev) : null;
     // console.log(board);
   };
 
@@ -63,7 +64,7 @@ export default function Board() {
       for (let j = 0; j < col; j++) {
         cols.push({
           value: 0,
-          component: <Tile value={0} open={false} />,
+          isFlagged: false,
           isOpen: false,
         });
       }
@@ -88,7 +89,6 @@ export default function Board() {
       if (!coordinates.includes(`${x}.${y}`)) {
         grid[x][y] = {
           value: -1,
-          component: <Tile value={-1} open={false} />,
         };
         coordinates.push(`${x}.${y}`);
         deployedMines++;
@@ -112,7 +112,6 @@ export default function Board() {
             }
           }
           board[i][j].value = count;
-          board[i][j].component = <Tile value={count} open={false} />;
         }
       }
     }
@@ -134,16 +133,21 @@ export default function Board() {
         ) {
           let tileValue = board[i][j].value;
           let isOpen = board[i][j].isOpen;
+          let isFlagged = board[i][j].isFlagged;
 
           // open adjacent tiles if its not yet opened
-          if (!isOpen && tileValue !== -1) {
-            board[i][j].component = <Tile value={tileValue} open={true} />;
+          if (!isOpen && tileValue !== -1 && !isFlagged) {
             board[i][j].isOpen = true;
             setCount((prev) => prev + 1);
           }
 
           // use recursion to traverse all empty Tileses
-          if (tileValue === 0 && (row !== i || col !== j) && !isOpen) {
+          if (
+            tileValue === 0 &&
+            (row !== i || col !== j) &&
+            !isOpen &&
+            !isFlagged
+          ) {
             // console.log(`v: ${tileValue}, r: ${i}, c: ${j}`);
             traverse(tileValue, i, j);
           }
@@ -153,7 +157,6 @@ export default function Board() {
 
     // open current tile if its not yet opened
     if (!board[row][col].isOpen) {
-      board[row][col].component = <Tile value={value} open={true} />;
       board[row][col].isOpen = true;
       setCount((prev) => prev + 1);
     }
@@ -165,13 +168,12 @@ export default function Board() {
       addMines(mineCount, _row, _col, board, [`${row}.${col}`]);
       traverseAllCellAndAssignValue(_row, _col, board);
       setGameStart(true);
-      console.log(board);
     }
 
     // if mine setGameOver, else open tiles
     const value = board[row][col].value;
     if (value === -1) {
-      !isRevealMines ? revealMines() : null;
+      !isRevealMines ? setIsRevealMines((prev) => !prev) : null;
       setGameOver(true);
       window.alert("Mine! Game Over");
     } else {
@@ -244,12 +246,31 @@ export default function Board() {
                   {rows.map((items, j) => {
                     return (
                       <span
-                        key={j}
-                        onClick={() =>
-                          !isGameOver ? handleOpenTiles(i, j) : {}
-                        }
+                        key={`[${i}][${j}]`}
+                        onContextMenu={(event: MouseEvent<HTMLSpanElement>) => {
+                          event.preventDefault();
+
+                          if (isGameOver) return;
+                          if (items.isOpen && items.value === 0) return;
+
+                          setBoard((prev) => {
+                            const newBoard = [...prev];
+                            newBoard[i][j].isFlagged = !items.isFlagged;
+                            return newBoard;
+                          });
+                        }}
+                        onClick={(event: SyntheticEvent<HTMLSpanElement>) => {
+                          if (isGameOver) return;
+                          if (items.isFlagged) return;
+
+                          handleOpenTiles(i, j);
+                        }}
                       >
-                        {items.component}
+                        <Tile
+                          value={items.value}
+                          open={items.isOpen}
+                          isFlagged={items.isFlagged}
+                        />
                       </span>
                     );
                   })}

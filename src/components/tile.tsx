@@ -1,7 +1,13 @@
-import { useTile } from "./tileProvider";
+import { useAtom } from "jotai";
+import { revealMinesAtom } from "./tileProvider";
+import { useEffect } from "react";
 
-export default function Tile({ value, open }) {
-  const { isRevealMines } = useTile();
+export default function Tile({ value, open, isFlagged }) {
+  const [isRevealMines] = useAtom(revealMinesAtom);
+
+  useEffect(() => {
+    console.log(isRevealMines);
+  }, [isRevealMines]);
 
   const getColor = (value) => {
     if (value == 0) return `hidden`;
@@ -21,6 +27,7 @@ export default function Tile({ value, open }) {
       `}
     >
       {open && <p className={`font-bold ${getColor(value)}`}>{value}</p>}
+      {isFlagged && <p>🚩</p>}
     </div>
   );
 }
