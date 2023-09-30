@@ -5,3 +5,16 @@
 .m-sm {
   margin: 0.1em;
 }
+
+.translate-min-1\/2 {
+  --tw-translate-x: -50%;
+  --tw-translate-y: -50%;
+}
+
+.translate-x-min-1\/2 {
+  --tw-translate-x: -50%;
+}
+
+.translate-y-min-1\/2 {
+  --tw-translate-y: -50%;
+}
